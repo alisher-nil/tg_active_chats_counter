@@ -1,15 +1,14 @@
 import asyncio
 import logging
-import os
 from datetime import datetime
 
-from dotenv import load_dotenv
-from telethon import TelegramClient
 from telethon.events import NewMessage
 from telethon.tl.custom.dialog import Dialog
 from telethon.tl.patched import MessageService
 from telethon.tl.types import MessageActionContactSignUp
 
+from client import client
+from config import settings
 from utils import (
     TimeMapping,
     calculate_start_end_date,
@@ -21,14 +20,6 @@ logging.basicConfig(
     format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s",
     level=logging.INFO,
 )
-load_dotenv()
-
-
-API_ID = os.getenv("API_ID")
-API_HASH = os.getenv("API_HASH")
-USER_PASSWORD = os.getenv("USER_PASSWORD")
-USER_PHONE = os.getenv("USER_PHONE")
-client = TelegramClient("dev", API_ID, API_HASH)
 
 
 @client.on(
@@ -137,7 +128,7 @@ async def get_active_private_chats(start_date, end_date):
 
 
 async def main():
-    await client.start()
+    await client.start(settings.user_phone, settings.user_password)
     await client.run_until_disconnected()
 
 
