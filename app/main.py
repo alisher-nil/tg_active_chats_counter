@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.events import NewMessage
 from telethon.tl.custom.dialog import Dialog
+from telethon.tl.patched import MessageService
+from telethon.tl.types import MessageActionContactSignUp
 
 from utils import (
     TimeMapping,
@@ -93,6 +95,16 @@ async def get_first_time_users(start_date: datetime) -> list[Dialog]:
         ):
             if dialog.date < start_date:
                 break
+
+            if isinstance(
+                dialog.message,
+                MessageService,
+            ) and isinstance(
+                dialog.message.action,
+                MessageActionContactSignUp,
+            ):
+                continue
+
             messages = await client.get_messages(
                 dialog,
                 limit=1,
@@ -101,6 +113,7 @@ async def get_first_time_users(start_date: datetime) -> list[Dialog]:
             first_message = messages[0]
             if first_message.date >= start_date:
                 first_time_users.append(dialog)
+
     return first_time_users
 
 

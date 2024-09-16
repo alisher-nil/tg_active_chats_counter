@@ -3,8 +3,7 @@ from enum import StrEnum
 
 from telethon.tl.custom.dialog import Dialog
 
-MESSAGE_MAX_LENGTH = 4096
-LOCAL_TZ = timezone(timedelta(hours=5))
+from constants import LOCAL_TZ, MESSAGE_MAX_LENGTH
 
 
 class TimeMapping(StrEnum):
