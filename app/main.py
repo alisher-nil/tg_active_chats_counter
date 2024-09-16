@@ -14,10 +14,12 @@ logging.basicConfig(
 )
 load_dotenv()
 
+LOCAL_TZ = timezone(offset=timedelta(hours=3))
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 USER_PASSWORD = os.getenv("USER_PASSWORD")
 USER_PHONE = os.getenv("USER_PHONE")
+MESSAGE_MAX_LENGTH = 4096
 client = TelegramClient("dev", API_ID, API_HASH)
 
 
@@ -52,22 +54,33 @@ async def handler(event: NewMessage.Event):
             f"Active private chats in the last {length} {TimeMapping[period]}: {len(active_chats)}"
         )
         if params.get("verbosity"):
-            response = get_verbose_response(active_chats)
-            await event.reply(response)
+            messages = get_verbose_responses(active_chats)
+            for message in messages:
+                await event.reply(message)
 
 
-def get_verbose_response(active_chats: list[Dialog]):
+def get_verbose_responses(active_chats: list[Dialog]) -> list[str]:
     result = []
+    active_chat_details = []
+    message_length = 0
     for chat in active_chats:
-        username_link = (
-            f"@{chat.entity.username}"
-            if chat.entity.username
-            else "No username"
-        )
-        name = chat.name if not chat.entity.deleted else "☠️ <deleted> ☠️"
-        result.append(f"{name} (`{chat.entity.id}`) - {username_link}")
+        chat_info = compile_chat_info(chat)
+        message_length += len(chat_info) + 1
+        if message_length > MESSAGE_MAX_LENGTH:
+            result.append("\n".join(active_chat_details))
+            active_chat_details = []
+        active_chat_details.append(chat_info)
 
-    return "\n".join(result)
+    result.append("\n".join(active_chat_details))
+    return result
+
+
+def compile_chat_info(chat: Dialog) -> str:
+    username_link = (
+        f"@{chat.entity.username}" if chat.entity.username else "No username"
+    )
+    display_name = chat.name if not chat.entity.deleted else "☠️ <deleted> ☠️"
+    return f"{display_name} (`{chat.entity.id}`) - {username_link}"
 
 
 def calculate_start_end_date(length: int, period: str):
