@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import os
 from datetime import datetime
@@ -135,5 +136,10 @@ async def get_active_private_chats(start_date, end_date):
     return active_chats
 
 
-client.start(USER_PHONE, USER_PASSWORD)
-client.run_until_disconnected()
+async def main():
+    await client.start()
+    await client.run_until_disconnected()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
