@@ -1,12 +1,18 @@
 import logging
 import os
-from datetime import datetime, timedelta, timezone
-from enum import StrEnum
+from datetime import datetime
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
 from telethon.events import NewMessage
 from telethon.tl.custom.dialog import Dialog
+
+from utils import (
+    TimeMapping,
+    calculate_start_end_date,
+    calculate_start_of_the_day,
+    get_verbose_responses,
+)
 
 logging.basicConfig(
     format="[%(levelname) 5s/%(asctime)s] %(name)s: %(message)s",
@@ -14,19 +20,12 @@ logging.basicConfig(
 )
 load_dotenv()
 
-LOCAL_TZ = timezone(offset=timedelta(hours=3))
+
 API_ID = os.getenv("API_ID")
 API_HASH = os.getenv("API_HASH")
 USER_PASSWORD = os.getenv("USER_PASSWORD")
 USER_PHONE = os.getenv("USER_PHONE")
-MESSAGE_MAX_LENGTH = 4096
 client = TelegramClient("dev", API_ID, API_HASH)
-
-
-class TimeMapping(StrEnum):
-    h = "hours"
-    d = "days"
-    w = "weeks"
 
 
 @client.on(
@@ -35,7 +34,7 @@ class TimeMapping(StrEnum):
         forwards=False,
         pattern=(
             r"^\/stats"  # trigger
-            r"( (?P<length>\d{1,3})(?P<period>[hwd]))"  # length and period
+            r"( (?P<length>\d{1,3})(?P<period>[hwd]))?"  # length and period
             r"(?P<verbosity> -v)?$"  # verbosity
         ),
     )
@@ -45,51 +44,64 @@ async def handler(event: NewMessage.Event):
     sender = await event.get_sender()
     if sender.is_self and chat == sender:
         params = event.pattern_match.groupdict()
-        length = params["length"]
-        period = params["period"]
-
-        start_date, end_date = calculate_start_end_date(length, period)
-        active_chats = await get_active_private_chats(start_date, end_date)
-        await event.reply(
-            f"Active private chats in the last {length} {TimeMapping[period]}: {len(active_chats)}"
-        )
-        if params.get("verbosity"):
-            messages = get_verbose_responses(active_chats)
-            for message in messages:
-                await event.reply(message)
+        length = params.get("length")
+        period = params.get("period")
+        if length is None and period is None:
+            await respond_with_first_time_users(event, params)
+        else:
+            await respond_with_active_chats(event, params)
 
 
-def get_verbose_responses(active_chats: list[Dialog]) -> list[str]:
-    result = []
-    active_chat_details = []
-    message_length = 0
-    for chat in active_chats:
-        chat_info = compile_chat_info(chat)
-        message_length += len(chat_info) + 1
-        if message_length > MESSAGE_MAX_LENGTH:
-            result.append("\n".join(active_chat_details))
-            active_chat_details = []
-        active_chat_details.append(chat_info)
-
-    result.append("\n".join(active_chat_details))
-    return result
-
-
-def compile_chat_info(chat: Dialog) -> str:
-    username_link = (
-        f"@{chat.entity.username}" if chat.entity.username else "No username"
+async def respond_with_active_chats(event: NewMessage.Event, params: dict):
+    length = params.get("length")
+    period = params.get("period")
+    start_date, end_date = calculate_start_end_date(length, period)
+    active_chats = await get_active_private_chats(start_date, end_date)
+    await event.reply(
+        f"Active private chats in the last {length} {TimeMapping[period]}: {len(active_chats)}"
     )
-    display_name = chat.name if not chat.entity.deleted else "☠️ <deleted> ☠️"
-    return f"{display_name} (`{chat.entity.id}`) - {username_link}"
+    if params.get("verbosity") and active_chats:
+        messages = get_verbose_responses(active_chats)
+        for message in messages:
+            await event.reply(message)
 
 
-def calculate_start_end_date(length: int, period: str):
-    end_date = datetime.now(timezone.utc)
+async def respond_with_first_time_users(event: NewMessage.Event, params: dict):
+    start_date = calculate_start_of_the_day()
+    first_time_chats = await get_first_time_users(start_date)
+    await event.reply(f"New private chats dotay: {len(first_time_chats)}")
+    if params.get("verbosity") and first_time_chats:
+        messages = get_verbose_responses(first_time_chats)
+        for message in messages:
+            await event.reply(message)
 
-    time_delta_params = {TimeMapping[period]: int(length)}
-    start_date = end_date - timedelta(**time_delta_params)
 
-    return start_date, end_date
+async def get_first_time_users(start_date: datetime) -> list[Dialog]:
+    first_time_users = []
+    me = await client.get_me()
+    async for dialog in client.iter_dialogs(
+        ignore_migrated=True,
+        archived=False,
+        ignore_pinned=True,
+    ):
+        if (
+            dialog.is_user
+            and dialog.entity != me
+            and not dialog.entity.bot
+            and not dialog.entity.support
+            and not dialog.entity.deleted
+        ):
+            if dialog.date < start_date:
+                break
+            messages = await client.get_messages(
+                dialog,
+                limit=1,
+                reverse=True,
+            )
+            first_message = messages[0]
+            if first_message.date >= start_date:
+                first_time_users.append(dialog)
+    return first_time_users
 
 
 async def get_active_private_chats(start_date, end_date):
