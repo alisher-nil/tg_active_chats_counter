@@ -33,7 +33,7 @@ logging.basicConfig(
         ),
     )
 )
-async def handler(event: NewMessage.Event):
+async def stats_request_handler(event: NewMessage.Event):
     chat = await event.get_chat()
     sender = await event.get_sender()
     if sender.is_self and chat == sender:
