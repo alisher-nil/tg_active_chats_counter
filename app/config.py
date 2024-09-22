@@ -1,11 +1,12 @@
-from pydantic import BaseSettings
+from pydantic import Field
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    api_id: str
-    api_hash: str
-    user_password: str | None
-    user_phone: str
+    api_id: str = Field(...)
+    api_hash: str = Field(...)
+    user_password: str | None = Field(None)
+    user_phone: str = Field(...)
 
     class Config:
         env_file = ".env"
