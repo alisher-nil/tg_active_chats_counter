@@ -7,6 +7,7 @@ class Settings(BaseSettings):
     api_hash: str = Field(...)
     user_password: str | None = Field(None)
     user_phone: str = Field(...)
+    database_url: str = Field("sqlite+aiosqlite:///./tg_counter.db")
 
     class Config:
         env_file = ".env"
