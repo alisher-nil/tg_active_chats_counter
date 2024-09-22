@@ -5,10 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
+    "alembic==1.13.2",
     "apscheduler>=3.10.4",
     "cryptg==0.4.0",
-    "pydantic-settings>=2.5.2",
-    "python-dotenv>=1.0.1",
+    "pydantic-settings==2.5.2",
+    "sqlalchemy>=2.0.35, <2.1",
     "telethon==1.36.0",
     "watchfiles==0.24.0",
 ]
