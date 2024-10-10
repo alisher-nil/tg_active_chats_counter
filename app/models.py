@@ -28,3 +28,14 @@ class Users(Base):
         String(TG_USERNAME_MAX_LENGTH)
     )
     created_at: Mapped[datetime] = mapped_column(insert_default=func.now())
+
+    def __repr__(self) -> str:
+        name = (
+            f"{self.first_name} {self.last_name}"
+            if self.last_name is not None
+            else self.first_name
+        ).strip()
+        username = f"({self.username})" if self.username is not None else ""
+        return (
+            f"User(id={self.id}) {self.telegram_id} {name} {username}".strip()
+        )

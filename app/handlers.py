@@ -16,13 +16,9 @@ async def new_user_handler(event: NewMessage.Event):
         return
 
     async for session in get_async_session():
-        user = await CRUDUsers.get_user_by_telegram_id(event.chat_id, session)
-        if user is None:
+        db_user = await CRUDUsers.get_user_by_telegram_id(
+            event.chat_id, session
+        )
+        if db_user is None:
             sender: User = await event.get_sender()
-            print(
-                sender.first_name, sender.last_name, sender.username, sender.id
-            )
-            user = await CRUDUsers.create(sender.to_dict(), session)
-            print(user)
-        else:
-            print("an old friend wrote something")
+            db_user = await CRUDUsers.create(sender.to_dict(), session)
