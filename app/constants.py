@@ -1,4 +1,8 @@
 from datetime import timedelta, timezone
 
+GMT_OFFSET = 5
+LOCAL_TZ = timezone(timedelta(hours=GMT_OFFSET))
+TELEGRAM_FIRST_NAME_MAX_LENGTH = 64
+TELEGRAM_LAST_NAME_MAX_LENGTH = 64
+TELEGRAM_USERNAME_MAX_LENGTH = 32
 MESSAGE_MAX_LENGTH = 4096
-LOCAL_TZ = timezone(timedelta(hours=5))
