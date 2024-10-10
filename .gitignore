@@ -155,3 +155,4 @@ cython_debug/
 # Telethon stuff
 *.session
 *.session-journal
+*.db
