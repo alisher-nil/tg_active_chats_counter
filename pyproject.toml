@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12, <3.13"
 dependencies = [
+    "aiosqlite==0.20.0",
     "alembic==1.13.2",
     "apscheduler>=3.10.4",
     "cryptg==0.4.0",
@@ -43,7 +44,7 @@ exclude = [
     "site-packages",
     "venv",
 ]
-src = ["app"]
+src = ["app, alembic"]
 line-length = 79
 indent-width = 4
 target-version = "py312"
@@ -65,3 +66,5 @@ line-ending = "auto"
 minversion = "8.0"
 addopts = "-v"
 testpaths = ["tests"]
+[tool.ruff.lint.per-file-ignores]
+"base.py" = ["F401"]
