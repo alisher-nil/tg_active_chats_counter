@@ -14,5 +14,5 @@ async def new_user_handler(event: NewMessage.Event):
     ):
         return
     sender: User = await event.get_sender()
-    print(sender.first_name, sender.last_name, sender.id)
+    print(sender.first_name, sender.last_name, sender.username, sender.id)
     print("it's a new incoming message")
