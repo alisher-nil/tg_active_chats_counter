@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-import handlers  # noqa: F401
+from app import handlers  # noqa: F401
 from client import client
 from config import settings
 

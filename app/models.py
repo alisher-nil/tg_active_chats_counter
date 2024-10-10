@@ -13,7 +13,11 @@ from app.core.db import Base
 
 
 class Users(Base):
-    telegram_id: Mapped[int] = mapped_column(BigInteger())
+    telegram_id: Mapped[int] = mapped_column(
+        BigInteger(),
+        index=True,
+        unique=True,
+    )
     first_name: Mapped[Optional[str]] = mapped_column(
         String(TG_FIRST_NAME_MAX_LENGTH)
     )

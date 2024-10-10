@@ -44,7 +44,7 @@ exclude = [
     "site-packages",
     "venv",
 ]
-src = ["app, alembic"]
+src = ["app", "alembic"]
 line-length = 79
 indent-width = 4
 target-version = "py312"
